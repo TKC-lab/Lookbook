@@ -153,7 +153,7 @@ function SaveOutfitSheet({ open, onClose, selected, onSave }) {
         {CATEGORIES.map((c) => (
           <div key={c} className="aspect-square flex-1 overflow-hidden rounded-xl2 bg-white shadow-card">
             {selected[c] ? (
-              <img src={selected[c].image} alt={c} className="h-full w-full object-cover" />
+              <img src={selected[c].image} alt={c} className="h-full w-full object-contain p-1" />
             ) : (
               <div className="grid h-full place-items-center text-xs text-subtle">{c}</div>
             )}

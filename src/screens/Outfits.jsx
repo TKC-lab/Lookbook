@@ -148,7 +148,7 @@ function OutfitCard({ outfit, itemsById, dragging, dimmed, onStartDrag, onExpand
         {CATEGORIES.map((c) => (
           <div key={c} className="aspect-square flex-1 overflow-hidden rounded-xl bg-canvas">
             {resolved[c] ? (
-              <img src={resolved[c].image} alt={c} className="h-full w-full object-cover" />
+              <img src={resolved[c].image} alt={c} className="h-full w-full object-contain p-1" />
             ) : (
               <div className="grid h-full place-items-center px-1 text-center text-[10px] text-subtle">
                 Item removed

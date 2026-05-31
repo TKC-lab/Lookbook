@@ -73,7 +73,7 @@ function ItemTile({ item, onDelete }) {
       onPointerUp={cancelPress}
       onPointerLeave={cancelPress}
     >
-      <img src={item.image} alt={item.name || item.category} className="h-full w-full object-cover" />
+      <img src={item.image} alt={item.name || item.category} className="h-full w-full object-contain p-3" />
       <span className="absolute left-2 top-2 rounded-full bg-canvas/90 px-2 py-0.5 text-[10px] font-medium text-ink shadow-card">
         {item.category}
       </span>
