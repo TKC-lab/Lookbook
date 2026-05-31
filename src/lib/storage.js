@@ -5,7 +5,7 @@ export const ITEMS_KEY = 'fitcheck.items.v1'
 export const OUTFITS_KEY = 'fitcheck.outfits.v1'
 
 export const CATEGORIES = ['Tops', 'Bottoms', 'Shoes']
-export const OCCASIONS = ['Casual', 'Work', 'Going Out', 'Other']
+export const OCCASIONS = ['Casual', 'Work', 'Going Out', 'Gym']
 
 function read(key) {
   try {
@@ -54,6 +54,13 @@ export function addItem({ image, category, name = '' }) {
   items.unshift(item)
   const ok = write(ITEMS_KEY, items)
   return ok ? item : null
+}
+
+export function updateItem(id, patch) {
+  const next = getItems().map((it) =>
+    it.id === id ? { ...it, ...patch, name: (patch.name ?? it.name).trim() } : it
+  )
+  write(ITEMS_KEY, next)
 }
 
 export function deleteItem(id) {

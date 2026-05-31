@@ -28,6 +28,11 @@ export default function App() {
     return true
   }
 
+  const updateItem = (id, patch) => {
+    store.updateItem(id, patch)
+    setItems(store.getItems())
+  }
+
   const deleteItem = (id) => {
     store.deleteItem(id)
     setItems(store.getItems())
@@ -67,7 +72,7 @@ export default function App() {
     <div className="mx-auto flex min-h-full max-w-md flex-col">
       <main className="flex-1 pb-28 pt-safe">
         {tab === 'wardrobe' && (
-          <Wardrobe items={items} onAdd={addItem} onDelete={deleteItem} />
+          <Wardrobe items={items} onAdd={addItem} onUpdate={updateItem} onDelete={deleteItem} />
         )}
         {tab === 'build' && (
           <Builder

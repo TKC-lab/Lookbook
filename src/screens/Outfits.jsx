@@ -10,6 +10,8 @@ import {
   CloseIcon
 } from '../components/icons.jsx'
 
+const OCCASION_FILTERS = ['All', ...OCCASIONS]
+
 export default function Outfits({ items, outfits, onDelete, onUpdate, onReorder, onGoToBuild }) {
   const itemsById = useMemo(() => indexById(items), [items])
 
@@ -21,11 +23,14 @@ export default function Outfits({ items, outfits, onDelete, onUpdate, onReorder,
     orderRef.current = order
   }, [order])
 
+  const [occasionFilter, setOccasionFilter] = useState('All')
   const [draggingId, setDraggingId] = useState(null)
   const listRef = useRef(null)
 
   const [expandedId, setExpandedId] = useState(null)
   const [editingId, setEditingId] = useState(null)
+
+  const visible = occasionFilter === 'All' ? order : order.filter((o) => o.occasion === occasionFilter)
 
   const startDrag = (e, id) => {
     e.preventDefault()
@@ -67,9 +72,25 @@ export default function Outfits({ items, outfits, onDelete, onUpdate, onReorder,
         <h1 className="text-2xl font-semibold tracking-tight">Outfits</h1>
         <p className="text-sm text-subtle">
           {outfits.length} saved look{outfits.length === 1 ? '' : 's'}
-          {outfits.length > 1 && ' · drag to reorder'}
+          {outfits.length > 1 && occasionFilter === 'All' && ' · drag to reorder'}
         </p>
       </header>
+
+      {outfits.length > 0 && (
+        <div className="no-scrollbar -mx-4 mt-4 flex gap-2 overflow-x-auto px-4">
+          {OCCASION_FILTERS.map((f) => (
+            <button
+              key={f}
+              onClick={() => setOccasionFilter(f)}
+              className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition ${
+                occasionFilter === f ? 'bg-ink text-canvas' : 'bg-white text-subtle shadow-card'
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+      )}
 
       {outfits.length === 0 ? (
         <div className="mt-16 flex flex-col items-center text-center">
@@ -87,20 +108,25 @@ export default function Outfits({ items, outfits, onDelete, onUpdate, onReorder,
             Build an outfit
           </button>
         </div>
+      ) : visible.length === 0 ? (
+        <div className="mt-16 flex flex-col items-center text-center">
+          <p className="font-medium">No {occasionFilter} outfits</p>
+          <p className="mt-1 text-sm text-subtle">Save an outfit with this occasion to see it here.</p>
+        </div>
       ) : (
         <div
           ref={listRef}
           className="mt-4 space-y-3"
           style={{ touchAction: draggingId ? 'none' : undefined }}
         >
-          {order.map((o) => (
+          {visible.map((o) => (
             <OutfitCard
               key={o.id}
               outfit={o}
               itemsById={itemsById}
               dragging={draggingId === o.id}
               dimmed={draggingId && draggingId !== o.id}
-              onStartDrag={(e) => startDrag(e, o.id)}
+              onStartDrag={occasionFilter === 'All' ? (e) => startDrag(e, o.id) : null}
               onExpand={() => setExpandedId(o.id)}
               onEdit={() => setEditingId(o.id)}
               onDelete={() => onDelete(o.id)}
@@ -197,13 +223,15 @@ function OutfitCard({ outfit, itemsById, dragging, dimmed, onStartDrag, onExpand
             >
               <TrashIcon className="h-[18px] w-[18px]" />
             </button>
-            <button
-              onPointerDown={onStartDrag}
-              className="grid h-9 w-9 cursor-grab touch-none place-items-center rounded-full bg-canvas text-subtle active:cursor-grabbing"
-              aria-label="Drag to reorder"
-            >
-              <GripIcon className="h-5 w-5" />
-            </button>
+            {onStartDrag && (
+              <button
+                onPointerDown={onStartDrag}
+                className="grid h-9 w-9 cursor-grab touch-none place-items-center rounded-full bg-canvas text-subtle active:cursor-grabbing"
+                aria-label="Drag to reorder"
+              >
+                <GripIcon className="h-5 w-5" />
+              </button>
+            )}
           </div>
         )}
       </div>

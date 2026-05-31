@@ -4,7 +4,7 @@
 import { ITEMS_KEY } from './storage.js'
 
 // Vite bundles each image and gives us a (base-path aware) URL.
-const urls = import.meta.glob('../seed-images/*.jpg', {
+const urls = import.meta.glob('../seed-images/*', {
   eager: true,
   import: 'default',
   query: '?url'
@@ -16,20 +16,26 @@ function urlFor(file) {
 
 // Ordered for a tidy grid: tops, then bottoms, then shoes.
 const SEED = [
-  { file: 'white-buttonup.jpg', category: 'Tops', name: 'White button-up' },
-  { file: 'black-buttonup.jpg', category: 'Tops', name: 'Black button-up' },
-  { file: 'white-polo.jpg', category: 'Tops', name: 'White polo' },
-  { file: 'grey-polo.jpg', category: 'Tops', name: 'Grey polo' },
-  { file: 'black-polo.jpg', category: 'Tops', name: 'Black polo' },
-  { file: 'black-tee.jpg', category: 'Tops', name: 'Black tee' },
-  { file: 'charcoal-tee.jpg', category: 'Tops', name: 'Charcoal tee' },
-  { file: 'heather-grey-tee.jpg', category: 'Tops', name: 'Heather grey tee' },
-  { file: 'plaid-flannel.jpg', category: 'Tops', name: 'Plaid flannel' },
-  { file: 'black-trousers.jpg', category: 'Bottoms', name: 'Black trousers' },
-  { file: 'black-slim-pants.jpg', category: 'Bottoms', name: 'Black slim pants' },
-  { file: 'black-shorts.jpg', category: 'Bottoms', name: 'Black shorts' },
-  { file: 'white-sneakers.jpg', category: 'Shoes', name: 'White sneakers' },
-  { file: 'black-sneakers.jpg', category: 'Shoes', name: 'Black sneakers' }
+  { file: 'white-buttonup.jpg',      category: 'Tops',    name: 'White button-up' },
+  { file: 'black-buttonup.jpg',      category: 'Tops',    name: 'Black button-up' },
+  { file: 'white-polo.jpg',          category: 'Tops',    name: 'White polo' },
+  { file: 'grey-polo.jpg',           category: 'Tops',    name: 'Grey polo' },
+  { file: 'black-polo.jpg',          category: 'Tops',    name: 'Black polo' },
+  { file: 'white-tee.jpg',           category: 'Tops',    name: 'White tee' },
+  { file: 'black-tee.jpg',           category: 'Tops',    name: 'Black tee' },
+  { file: 'charcoal-tee.jpg',        category: 'Tops',    name: 'Charcoal tee' },
+  { file: 'plaid-flannel.jpg',       category: 'Tops',    name: 'Plaid flannel' },
+  { file: 'grey-hoodie.jpg',         category: 'Tops',    name: 'Grey hoodie' },
+  { file: 'black-quarter-zip.jpg',   category: 'Tops',    name: 'Black quarter-zip' },
+  { file: 'black-trousers.jpg',      category: 'Bottoms', name: 'Black trousers' },
+  { file: 'black-slim-pants.jpg',    category: 'Bottoms', name: 'Black slim pants' },
+  { file: 'black-joggers.jpg',       category: 'Bottoms', name: 'Black joggers' },
+  { file: 'black-shorts.jpg',        category: 'Bottoms', name: 'Black shorts' },
+  { file: 'grey-shorts.jpg',         category: 'Bottoms', name: 'Grey shorts' },
+  { file: 'adidas-samba.webp',       category: 'Shoes',   name: 'Adidas Samba' },
+  { file: 'new-balance-574.webp',    category: 'Shoes',   name: 'New Balance 574' },
+  { file: 'black-loafers.webp',      category: 'Shoes',   name: 'Black loafers' },
+  { file: 'birkenstock-arizona.webp',category: 'Shoes',   name: 'Birkenstock Arizona' },
 ]
 
 const SEED_FLAG = 'fitcheck.seeded.v1'
