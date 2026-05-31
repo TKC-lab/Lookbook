@@ -32,7 +32,7 @@ const SEED = [
   { file: 'black-sneakers.jpg', category: 'Shoes', name: 'Black sneakers' }
 ]
 
-const SEED_FLAG = 'lookbook.seeded.v1'
+const SEED_FLAG = 'fitcheck.seeded.v1'
 
 export function seedIfNeeded() {
   try {
@@ -53,6 +53,6 @@ export function seedIfNeeded() {
     localStorage.setItem(ITEMS_KEY, JSON.stringify(items))
     localStorage.setItem(SEED_FLAG, '1')
   } catch (err) {
-    console.error('Lookbook: starter wardrobe seed failed', err)
+    console.error('Fit Check: starter wardrobe seed failed', err)
   }
 }

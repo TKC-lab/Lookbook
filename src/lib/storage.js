@@ -1,8 +1,8 @@
-// localStorage data layer for Lookbook.
+// localStorage data layer for Fit Check.
 // Two collections: wardrobe items and saved outfits.
 
-export const ITEMS_KEY = 'lookbook.items.v1'
-export const OUTFITS_KEY = 'lookbook.outfits.v1'
+export const ITEMS_KEY = 'fitcheck.items.v1'
+export const OUTFITS_KEY = 'fitcheck.outfits.v1'
 
 export const CATEGORIES = ['Tops', 'Bottoms', 'Shoes']
 export const OCCASIONS = ['Casual', 'Work', 'Going Out', 'Other']
@@ -22,7 +22,7 @@ function write(key, value) {
     return true
   } catch (err) {
     // Most likely the 5MB quota was exceeded by base64 images.
-    console.error('Lookbook: failed to save to localStorage', err)
+    console.error('Fit Check: failed to save to localStorage', err)
     return false
   }
 }

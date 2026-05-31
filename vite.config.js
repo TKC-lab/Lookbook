@@ -5,7 +5,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 // For GitHub Pages project sites, the app is served from
 // https://<user>.github.io/<repo>/ so the base path must match the repo name.
 // Override at build time with:  VITE_BASE=/your-repo-name/ npm run build
-const base = process.env.VITE_BASE || '/lookbook/'
+const base = process.env.VITE_BASE || '/fitcheck/'
 
 export default defineConfig({
   base,
@@ -15,9 +15,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Lookbook',
-        short_name: 'Lookbook',
-        description: 'Your digital closet — photograph your clothes and build outfits.',
+        name: 'Fit Check',
+        short_name: 'Fit Check',
+        description: 'Build outfits from your digital wardrobe.',
         theme_color: '#111111',
         background_color: '#faf9f7',
         display: 'standalone',

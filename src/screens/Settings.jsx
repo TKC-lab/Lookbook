@@ -1,14 +1,15 @@
 import { useState } from 'react'
+import { ITEMS_KEY, OUTFITS_KEY } from '../lib/storage.js'
 
 export default function Settings({ items, outfits, onClearAll }) {
   const [confirm, setConfirm] = useState(false)
 
-  // Rough estimate of how much localStorage Lookbook is using.
+  // Rough estimate of how much localStorage Fit Check is using.
   const usedKb = (() => {
     try {
       const bytes =
-        (localStorage.getItem('lookbook.items.v1')?.length || 0) +
-        (localStorage.getItem('lookbook.outfits.v1')?.length || 0)
+        (localStorage.getItem(ITEMS_KEY)?.length || 0) +
+        (localStorage.getItem(OUTFITS_KEY)?.length || 0)
       return Math.round(bytes / 1024)
     } catch {
       return 0
@@ -63,7 +64,7 @@ export default function Settings({ items, outfits, onClearAll }) {
       </div>
 
       <p className="mt-8 text-center text-xs text-subtle">
-        Lookbook · all data stays on your device
+        Fit Check · all data stays on your device
       </p>
     </div>
   )

@@ -30,9 +30,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          # Automatically matches the base path to the repo name,
-          # so https://username.github.io/<repo>/ works without any config.
-          VITE_BASE: /${{ github.event.repository.name }}/
+          VITE_BASE: /fitcheck/
 
       - uses: actions/upload-pages-artifact@v3
         with:
