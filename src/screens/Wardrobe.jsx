@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react'
 import { CATEGORIES } from '../lib/storage.js'
-import { fileToCompressedDataURL } from '../lib/image.js'
+import { fileToDataURL, removeImageBackground } from '../lib/image.js'
 import Sheet from '../components/Sheet.jsx'
-import { PlusIcon, CameraIcon, TrashIcon } from '../components/icons.jsx'
+import { PlusIcon, UploadIcon, TrashIcon } from '../components/icons.jsx'
 
 const FILTERS = ['All', ...CATEGORIES]
 
@@ -118,11 +118,11 @@ function EmptyState({ onAdd, filtered }) {
   return (
     <div className="mt-16 flex flex-col items-center text-center">
       <div className="grid h-16 w-16 place-items-center rounded-full bg-white shadow-card">
-        <CameraIcon className="h-8 w-8 text-subtle" />
+        <UploadIcon className="h-8 w-8 text-subtle" />
       </div>
       <p className="mt-4 font-medium">{filtered ? 'Nothing here yet' : 'Your closet is empty'}</p>
       <p className="mt-1 max-w-[16rem] text-sm text-subtle">
-        Snap or upload a photo of a piece to start building your wardrobe.
+        Save product images from any website, then upload them here. Backgrounds are removed automatically.
       </p>
       {!filtered && (
         <button
@@ -136,41 +136,65 @@ function EmptyState({ onAdd, filtered }) {
   )
 }
 
+// Status: 'idle' | 'loading' | 'removing' | 'done'
 function AddItemSheet({ open, onClose, onAdd }) {
-  const [image, setImage] = useState(null)
+  const [rawImage, setRawImage] = useState(null)   // resized, original bg
+  const [image, setImage] = useState(null)          // what will be saved
+  const [status, setStatus] = useState('idle')
+  const [removeBg, setRemoveBg] = useState(true)
   const [category, setCategory] = useState(CATEGORIES[0])
   const [name, setName] = useState('')
-  const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const fileRef = useRef(null)
 
   const reset = () => {
+    setRawImage(null)
     setImage(null)
+    setStatus('idle')
+    setRemoveBg(true)
     setCategory(CATEGORIES[0])
     setName('')
     setError('')
-    setBusy(false)
   }
 
-  const close = () => {
-    reset()
-    onClose()
+  const close = () => { reset(); onClose() }
+
+  const applyRemoval = async (raw, shouldRemove) => {
+    if (!shouldRemove) { setImage(raw); return }
+    setStatus('removing')
+    try {
+      const result = await removeImageBackground(raw)
+      setImage(result)
+    } catch {
+      setImage(raw) // fall back to original on error
+    }
+    setStatus('done')
   }
 
   const onPick = async (e) => {
     const file = e.target.files?.[0]
     if (!file) return
-    setBusy(true)
     setError('')
+    setStatus('loading')
+    setRawImage(null)
+    setImage(null)
     try {
-      const dataUrl = await fileToCompressedDataURL(file)
-      setImage(dataUrl)
-    } catch (err) {
+      const resized = await fileToDataURL(file, { maxSize: 900, outputFormat: 'png' })
+      setRawImage(resized)
+      await applyRemoval(resized, removeBg)
+      setStatus('done')
+    } catch {
       setError('Could not read that image. Try another.')
+      setStatus('idle')
     } finally {
-      setBusy(false)
       e.target.value = ''
     }
+  }
+
+  const toggleRemoveBg = async () => {
+    const next = !removeBg
+    setRemoveBg(next)
+    if (rawImage) await applyRemoval(rawImage, next)
   }
 
   const save = () => {
@@ -183,31 +207,91 @@ function AddItemSheet({ open, onClose, onAdd }) {
     close()
   }
 
+  const busy = status === 'loading' || status === 'removing'
+  const statusLabel = status === 'loading' ? 'Reading image…' : 'Removing background…'
+
   return (
     <Sheet open={open} title="Add item" onClose={close}>
+      {/* Hidden file input — no capture attribute so it opens the photo library / files */}
       <input
         ref={fileRef}
         type="file"
         accept="image/*"
-        capture="environment"
         className="hidden"
         onChange={onPick}
       />
 
+      {/* Preview area */}
       <button
         onClick={() => fileRef.current?.click()}
-        className="relative flex aspect-[3/4] w-full items-center justify-center overflow-hidden rounded-xl2 border border-dashed border-line bg-white"
+        disabled={busy}
+        className="relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-xl2 border border-dashed border-line"
+        style={{
+          // Checkerboard to show transparency
+          backgroundImage: image
+            ? 'repeating-conic-gradient(#e8e6e2 0% 25%, #f5f4f1 0% 50%)'
+            : undefined,
+          backgroundSize: '20px 20px'
+        }}
       >
         {image ? (
-          <img src={image} alt="Preview" className="h-full w-full object-cover" />
+          <img
+            src={image}
+            alt="Preview"
+            className="h-full w-full object-contain p-2"
+          />
         ) : (
-          <div className="flex flex-col items-center gap-2 text-subtle">
-            <CameraIcon className="h-8 w-8" />
-            <span className="text-sm font-medium">{busy ? 'Processing…' : 'Take photo or upload'}</span>
+          <div className="flex flex-col items-center gap-3 text-subtle">
+            <UploadIcon className="h-9 w-9" />
+            <div className="text-center">
+              <p className="text-sm font-medium text-ink">Choose image</p>
+              <p className="mt-0.5 text-xs">
+                Screenshot from any website, or tap to browse photos
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Processing overlay */}
+        {busy && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-canvas/80 backdrop-blur-sm">
+            <div className="h-7 w-7 animate-spin rounded-full border-2 border-line border-t-ink" />
+            <span className="text-xs font-medium text-ink">{statusLabel}</span>
           </div>
         )}
       </button>
 
+      {/* Re-pick + remove-background toggle */}
+      {image && !busy && (
+        <div className="mt-3 flex items-center justify-between">
+          <button
+            onClick={() => fileRef.current?.click()}
+            className="text-sm text-subtle underline underline-offset-2"
+          >
+            Choose different image
+          </button>
+          <button
+            onClick={toggleRemoveBg}
+            className="flex items-center gap-2 text-sm"
+            aria-pressed={removeBg}
+          >
+            <span className="text-subtle">Remove background</span>
+            <span
+              className={`relative inline-flex h-5 w-9 items-center rounded-full transition ${
+                removeBg ? 'bg-ink' : 'bg-line'
+              }`}
+            >
+              <span
+                className={`inline-block h-3.5 w-3.5 translate-x-1 rounded-full bg-white shadow transition ${
+                  removeBg ? 'translate-x-[18px]' : ''
+                }`}
+              />
+            </span>
+          </button>
+        </div>
+      )}
+
+      {/* Category */}
       <div className="mt-4">
         <p className="mb-2 text-sm font-medium">Category</p>
         <div className="flex gap-2">
@@ -225,6 +309,7 @@ function AddItemSheet({ open, onClose, onAdd }) {
         </div>
       </div>
 
+      {/* Name */}
       <div className="mt-4">
         <label className="mb-2 block text-sm font-medium">Name (optional)</label>
         <input
