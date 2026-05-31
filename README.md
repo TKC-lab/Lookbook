@@ -38,7 +38,7 @@ If you ever need to regenerate the app icons, run `node scripts/gen-icons.mjs`.
 
 ## Deploy to GitHub Pages
 
-Pushes to `main` automatically build and deploy via GitHub Actions. The workflow sets `VITE_BASE=/fitcheck/` to match the repo name.
+Pushes to `main` automatically build and deploy via GitHub Actions. The workflow sets `VITE_BASE=/Fitcheck/` to match the repo name.
 
 To deploy manually or from a fork, update `VITE_BASE` in `.github/workflows/deploy.yml` to match your repo name.
 
