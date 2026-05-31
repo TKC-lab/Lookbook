@@ -5,7 +5,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 // For GitHub Pages project sites, the app is served from
 // https://<user>.github.io/<repo>/ so the base path must match the repo name.
 // Override at build time with:  VITE_BASE=/your-repo-name/ npm run build
-const base = process.env.VITE_BASE || '/fitcheck/'
+const base = process.env.VITE_BASE || '/Fitcheck/'
 
 export default defineConfig({
   base,
