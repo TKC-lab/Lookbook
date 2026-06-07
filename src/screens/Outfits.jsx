@@ -7,7 +7,9 @@ import {
   LayersIcon,
   GripIcon,
   PencilIcon,
-  CloseIcon
+  CloseIcon,
+  ChevronLeft,
+  ChevronRight
 } from '../components/icons.jsx'
 
 const OCCASION_FILTERS = ['All', ...OCCASIONS]
@@ -24,6 +26,7 @@ export default function Outfits({ items, outfits, onDelete, onUpdate, onReorder,
   }, [order])
 
   const [occasionFilter, setOccasionFilter] = useState('All')
+  const [reordering, setReordering] = useState(false)
   const [draggingId, setDraggingId] = useState(null)
   const listRef = useRef(null)
 
@@ -68,12 +71,23 @@ export default function Outfits({ items, outfits, onDelete, onUpdate, onReorder,
 
   return (
     <div className="px-4">
-      <header className="pt-2">
-        <h1 className="text-2xl font-semibold tracking-tight">Outfits</h1>
-        <p className="text-sm text-subtle">
-          {outfits.length} saved look{outfits.length === 1 ? '' : 's'}
-          {outfits.length > 1 && occasionFilter === 'All' && ' · drag to reorder'}
-        </p>
+      <header className="flex items-center justify-between pt-2">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Outfits</h1>
+          <p className="text-sm text-subtle">
+            {outfits.length} saved look{outfits.length === 1 ? '' : 's'}
+          </p>
+        </div>
+        {outfits.length > 1 && occasionFilter === 'All' && (
+          <button
+            onClick={() => setReordering((r) => !r)}
+            className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+              reordering ? 'bg-ink text-canvas' : 'bg-white text-subtle shadow-card'
+            }`}
+          >
+            {reordering ? 'Done' : 'Reorder'}
+          </button>
+        )}
       </header>
 
       {outfits.length > 0 && (
@@ -126,10 +140,11 @@ export default function Outfits({ items, outfits, onDelete, onUpdate, onReorder,
               itemsById={itemsById}
               dragging={draggingId === o.id}
               dimmed={draggingId && draggingId !== o.id}
-              onStartDrag={occasionFilter === 'All' ? (e) => startDrag(e, o.id) : null}
-              onExpand={() => setExpandedId(o.id)}
-              onEdit={() => setEditingId(o.id)}
-              onDelete={() => onDelete(o.id)}
+              reordering={reordering}
+              onStartDrag={reordering ? (e) => startDrag(e, o.id) : null}
+              onExpand={reordering ? null : () => setExpandedId(o.id)}
+              onEdit={reordering ? null : () => setEditingId(o.id)}
+              onDelete={reordering ? null : () => onDelete(o.id)}
             />
           ))}
         </div>
@@ -138,9 +153,11 @@ export default function Outfits({ items, outfits, onDelete, onUpdate, onReorder,
       {expanded && (
         <OutfitDetail
           outfit={expanded}
+          outfits={visible}
           itemsById={itemsById}
           onClose={() => setExpandedId(null)}
           onEdit={() => setEditingId(expanded.id)}
+          onNavigate={(id) => setExpandedId(id)}
         />
       )}
 
@@ -159,9 +176,53 @@ export default function Outfits({ items, outfits, onDelete, onUpdate, onReorder,
   )
 }
 
-function OutfitCard({ outfit, itemsById, dragging, dimmed, onStartDrag, onExpand, onEdit, onDelete }) {
+function OutfitCard({ outfit, itemsById, dragging, dimmed, reordering, onStartDrag, onExpand, onEdit, onDelete }) {
   const [confirm, setConfirm] = useState(false)
   const resolved = resolveOutfit(outfit, itemsById)
+
+  const images = (
+    <div className="flex gap-2">
+      {CATEGORIES.map((c) => (
+        <div key={c} className="aspect-square flex-1 overflow-hidden rounded-xl bg-canvas">
+          {resolved[c] ? (
+            <img src={resolved[c].image} alt={c} className="h-full w-full object-contain p-1" />
+          ) : (
+            <div className="grid h-full place-items-center px-1 text-center text-[10px] text-subtle">
+              Item removed
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+
+  if (reordering) {
+    return (
+      <div
+        data-oid={outfit.id}
+        className={`flex overflow-hidden rounded-xl2 bg-white shadow-card transition ${
+          dragging ? 'relative z-10 scale-[1.02] shadow-float' : ''
+        } ${dimmed ? 'opacity-60' : ''}`}
+      >
+        <button
+          onPointerDown={onStartDrag}
+          className="flex w-14 flex-shrink-0 cursor-grab touch-none items-center justify-center bg-canvas text-subtle/60 active:cursor-grabbing"
+          aria-label="Drag to reorder"
+        >
+          <GripIcon className="h-6 w-6" />
+        </button>
+        <div className="flex-1 p-3">
+          {images}
+          <div className="mt-2">
+            <p className="truncate font-medium">{outfit.name || 'Untitled look'}</p>
+            <span className="mt-0.5 inline-block rounded-full bg-canvas px-2.5 py-0.5 text-xs text-subtle">
+              {outfit.occasion}
+            </span>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div
@@ -171,17 +232,7 @@ function OutfitCard({ outfit, itemsById, dragging, dimmed, onStartDrag, onExpand
       } ${dimmed ? 'opacity-60' : ''}`}
     >
       <button onClick={onExpand} className="flex w-full gap-2 text-left">
-        {CATEGORIES.map((c) => (
-          <div key={c} className="aspect-square flex-1 overflow-hidden rounded-xl bg-canvas">
-            {resolved[c] ? (
-              <img src={resolved[c].image} alt={c} className="h-full w-full object-contain p-1" />
-            ) : (
-              <div className="grid h-full place-items-center px-1 text-center text-[10px] text-subtle">
-                Item removed
-              </div>
-            )}
-          </div>
-        ))}
+        {images}
       </button>
 
       <div className="mt-3 flex items-center justify-between gap-2">
@@ -223,15 +274,6 @@ function OutfitCard({ outfit, itemsById, dragging, dimmed, onStartDrag, onExpand
             >
               <TrashIcon className="h-[18px] w-[18px]" />
             </button>
-            {onStartDrag && (
-              <button
-                onPointerDown={onStartDrag}
-                className="grid h-9 w-9 cursor-grab touch-none place-items-center rounded-full bg-canvas text-subtle active:cursor-grabbing"
-                aria-label="Drag to reorder"
-              >
-                <GripIcon className="h-5 w-5" />
-              </button>
-            )}
           </div>
         )}
       </div>
@@ -239,12 +281,67 @@ function OutfitCard({ outfit, itemsById, dragging, dimmed, onStartDrag, onExpand
   )
 }
 
-// Full-screen vertical view: top over bottom over shoes.
-function OutfitDetail({ outfit, itemsById, onClose, onEdit }) {
+// Full-screen vertical view: top over bottom over shoes. Swipe left/right to navigate outfits.
+function OutfitDetail({ outfit, outfits, itemsById, onClose, onEdit, onNavigate }) {
+  const currentIndex = outfits.findIndex((o) => o.id === outfit.id)
+  const hasPrev = currentIndex > 0
+  const hasNext = currentIndex < outfits.length - 1
   const resolved = resolveOutfit(outfit, itemsById)
 
+  const [drag, setDrag] = useState(0)
+  const [animating, setAnimating] = useState(false)
+  const startX = useRef(null)
+  const startY = useRef(null)
+  const isHorizontal = useRef(null)
+
+  useEffect(() => {
+    setDrag(0)
+    setAnimating(false)
+  }, [outfit.id])
+
+  const navigate = (dir) => {
+    const next = outfits[currentIndex + dir]
+    if (next) onNavigate(next.id)
+  }
+
+  const onPointerDown = (e) => {
+    startX.current = e.clientX
+    startY.current = e.clientY
+    isHorizontal.current = null
+    setAnimating(false)
+  }
+
+  const onPointerMove = (e) => {
+    if (startX.current === null) return
+    const dx = e.clientX - startX.current
+    const dy = e.clientY - startY.current
+    if (isHorizontal.current === null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+      isHorizontal.current = Math.abs(dx) > Math.abs(dy)
+    }
+    if (isHorizontal.current) setDrag(dx)
+  }
+
+  const onPointerUp = (e) => {
+    if (startX.current === null) return
+    if (isHorizontal.current) {
+      const dx = e.clientX - startX.current
+      if (dx < -60 && hasNext) { navigate(1) }
+      else if (dx > 60 && hasPrev) { navigate(-1) }
+      else { setAnimating(true); setDrag(0); setTimeout(() => setAnimating(false), 200) }
+    }
+    startX.current = null
+    isHorizontal.current = null
+    if (!isHorizontal.current) setDrag(0)
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-canvas">
+    <div
+      className="fixed inset-0 z-50 flex flex-col bg-canvas"
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      onPointerLeave={onPointerUp}
+    >
       <header className="grid grid-cols-3 items-center px-4 pb-3 pt-safe">
         <button
           onClick={onClose}
@@ -253,10 +350,14 @@ function OutfitDetail({ outfit, itemsById, onClose, onEdit }) {
         >
           <CloseIcon className="h-5 w-5" />
         </button>
+
         <div className="text-center">
           <p className="truncate font-semibold">{outfit.name || 'Untitled look'}</p>
-          <span className="text-xs text-subtle">{outfit.occasion}</span>
+          <span className="text-xs text-subtle">
+            {outfit.occasion}{outfits.length > 1 ? ` · ${currentIndex + 1}/${outfits.length}` : ''}
+          </span>
         </div>
+
         <button
           onClick={onEdit}
           className="justify-self-end rounded-full bg-ink px-4 py-2 text-sm font-medium text-canvas shadow-card active:scale-95"
@@ -265,13 +366,36 @@ function OutfitDetail({ outfit, itemsById, onClose, onEdit }) {
         </button>
       </header>
 
-      <div className="no-scrollbar flex-1 overflow-y-auto px-6 pb-10 pt-2">
-        <div className="mx-auto flex max-w-xs flex-col items-center gap-3">
+      {hasPrev && (
+        <button
+          onClick={() => navigate(-1)}
+          className="fixed left-3 top-1/2 z-10 grid h-14 w-14 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink shadow-float backdrop-blur-sm active:scale-95"
+          aria-label="Previous outfit"
+        >
+          <ChevronLeft className="h-8 w-8" />
+        </button>
+      )}
+      {hasNext && (
+        <button
+          onClick={() => navigate(1)}
+          className="fixed right-3 top-1/2 z-10 grid h-14 w-14 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-ink shadow-float backdrop-blur-sm active:scale-95"
+          aria-label="Next outfit"
+        >
+          <ChevronRight className="h-8 w-8" />
+        </button>
+      )}
+
+      <div className="no-scrollbar flex-1 overflow-y-auto px-6 pb-10 pt-2" style={{ touchAction: 'pan-y' }}>
+        <div
+          className="mx-auto flex max-w-xs flex-col items-center gap-3"
+          style={{
+            transform: `translateX(${drag}px)`,
+            transition: animating ? 'transform 0.2s ease' : 'none',
+            opacity: 1 - Math.min(Math.abs(drag) / 300, 0.3),
+          }}
+        >
           {CATEGORIES.map((c) => (
-            <div
-              key={c}
-              className="w-full overflow-hidden rounded-xl2 bg-white shadow-card"
-            >
+            <div key={c} className="w-full overflow-hidden rounded-xl2 bg-white shadow-card">
               {resolved[c] ? (
                 <img
                   src={resolved[c].image}

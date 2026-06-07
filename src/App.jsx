@@ -7,7 +7,7 @@ import Outfits from './screens/Outfits.jsx'
 import Settings from './screens/Settings.jsx'
 
 export default function App() {
-  const [tab, setTab] = useState('wardrobe')
+  const [tab, setTab] = useState('outfits')
   const [items, setItems] = useState(() => store.getItems())
   const [outfits, setOutfits] = useState(() => store.getOutfits())
 
@@ -56,6 +56,11 @@ export default function App() {
     setOutfits(store.getOutfits())
   }
 
+  const reorderItems = (orderedIds) => {
+    store.reorderItems(orderedIds)
+    setItems(store.getItems())
+  }
+
   const reorderOutfits = (orderedIds) => {
     store.reorderOutfits(orderedIds)
     setOutfits(store.getOutfits())
@@ -72,7 +77,7 @@ export default function App() {
     <div className="mx-auto flex min-h-full max-w-md flex-col">
       <main className="flex-1 pb-28 pt-safe">
         {tab === 'wardrobe' && (
-          <Wardrobe items={items} onAdd={addItem} onUpdate={updateItem} onDelete={deleteItem} />
+          <Wardrobe items={items} onAdd={addItem} onUpdate={updateItem} onDelete={deleteItem} onReorder={reorderItems} />
         )}
         {tab === 'build' && (
           <Builder

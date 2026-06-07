@@ -78,7 +78,7 @@ export default function Builder({ items, onSave, onGoToWardrobe }) {
     <div className="px-4">
       <Header />
 
-      <div className="mt-4 space-y-4">
+      <div className="mt-3 space-y-2">
         {CATEGORIES.map((c) => (
           <SwipeStack
             key={c}
@@ -93,7 +93,7 @@ export default function Builder({ items, onSave, onGoToWardrobe }) {
       <button
         onClick={() => setSaving(true)}
         disabled={!canSave}
-        className="mt-6 w-full rounded-full bg-ink py-3.5 text-sm font-semibold text-canvas shadow-card transition active:scale-[0.99] disabled:opacity-40"
+        className="mt-4 w-full rounded-full bg-ink py-3 text-sm font-semibold text-canvas shadow-card transition active:scale-[0.99] disabled:opacity-40"
       >
         {canSave ? 'Save outfit' : 'Pick one from each row'}
       </button>

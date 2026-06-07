@@ -63,7 +63,7 @@ export default function SwipeStack({ category, items, index, onIndexChange }) {
         </button>
 
         <div
-          className="relative h-44 flex-1 touch-pan-y overflow-hidden rounded-xl2 bg-white shadow-card"
+          className="relative h-36 flex-1 touch-pan-y overflow-hidden rounded-xl2 bg-white shadow-card"
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
@@ -81,7 +81,7 @@ export default function SwipeStack({ category, items, index, onIndexChange }) {
               <img
                 src={current.image}
                 alt={current.name || category}
-                className="h-full w-full object-contain p-3"
+                className="h-full w-full object-contain p-2"
                 draggable={false}
               />
               {current.name && (

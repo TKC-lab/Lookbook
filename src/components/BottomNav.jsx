@@ -1,9 +1,9 @@
 import { GridIcon, HangerIcon, LayersIcon, SettingsIcon } from './icons.jsx'
 
 const TABS = [
-  { key: 'wardrobe', label: 'Wardrobe', Icon: GridIcon },
-  { key: 'build', label: 'Build', Icon: HangerIcon },
   { key: 'outfits', label: 'Outfits', Icon: LayersIcon },
+  { key: 'build', label: 'Build', Icon: HangerIcon },
+  { key: 'wardrobe', label: 'Wardrobe', Icon: GridIcon },
   { key: 'settings', label: 'Settings', Icon: SettingsIcon }
 ]
 

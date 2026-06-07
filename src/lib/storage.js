@@ -5,7 +5,7 @@ export const ITEMS_KEY = 'fitcheck.items.v1'
 export const OUTFITS_KEY = 'fitcheck.outfits.v1'
 
 export const CATEGORIES = ['Tops', 'Bottoms', 'Shoes']
-export const OCCASIONS = ['Casual', 'Work', 'Going Out', 'Gym']
+export const OCCASIONS = ['Casual', 'Work', 'Gym', 'Other']
 
 function read(key) {
   try {
@@ -100,6 +100,12 @@ export function updateOutfit(id, patch) {
     o.id === id ? { ...o, ...patch, name: (patch.name ?? o.name).trim() } : o
   )
   write(OUTFITS_KEY, next)
+}
+
+export function reorderItems(orderedIds) {
+  const byId = indexById(getItems())
+  const next = orderedIds.map((id) => byId[id]).filter(Boolean)
+  write(ITEMS_KEY, next)
 }
 
 export function reorderOutfits(orderedIds) {

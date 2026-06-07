@@ -1,17 +1,68 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { CATEGORIES } from '../lib/storage.js'
 import { fileToDataURL, removeImageBackground } from '../lib/image.js'
 import Sheet from '../components/Sheet.jsx'
-import { PlusIcon, UploadIcon, TrashIcon, PencilIcon } from '../components/icons.jsx'
+import { PlusIcon, UploadIcon, TrashIcon, PencilIcon, GripIcon } from '../components/icons.jsx'
 
-const FILTERS = ['All', ...CATEGORIES]
+const FILTERS = [...CATEGORIES, 'All']
 
-export default function Wardrobe({ items, onAdd, onUpdate, onDelete }) {
-  const [filter, setFilter] = useState('All')
+export default function Wardrobe({ items, onAdd, onUpdate, onDelete, onReorder }) {
+  const [filter, setFilter] = useState('Tops')
   const [adding, setAdding] = useState(false)
   const [editingItem, setEditingItem] = useState(null)
+  const [reordering, setReordering] = useState(false)
+  const [localItems, setLocalItems] = useState(items)
+  const localRef = useRef(localItems)
+  const [draggingId, setDraggingId] = useState(null)
+  const listRef = useRef(null)
 
-  const visible = filter === 'All' ? items : items.filter((it) => it.category === filter)
+  useEffect(() => { setLocalItems(items) }, [items])
+  useEffect(() => { localRef.current = localItems }, [localItems])
+
+  const handleFilterChange = (f) => {
+    setFilter(f)
+    setReordering(false)
+  }
+
+  const displayItems = reordering ? localItems : items
+  const visible = filter === 'All' ? displayItems : displayItems.filter((it) => it.category === filter)
+
+  const startDrag = (e, id) => {
+    e.preventDefault()
+    setDraggingId(id)
+    const onMove = (ev) => {
+      const clientY = ev.clientY
+      const cards = [...listRef.current.querySelectorAll('[data-iid]')]
+      const mids = cards.map((c) => {
+        const r = c.getBoundingClientRect()
+        return { id: c.dataset.iid, mid: r.top + r.height / 2 }
+      })
+      const newIndex = mids.filter((m) => m.id !== id && m.mid < clientY).length
+      setLocalItems((prev) => {
+        const vis = filter === 'All' ? prev : prev.filter((it) => it.category === filter)
+        const cur = vis.findIndex((it) => it.id === id)
+        if (cur === -1 || cur === newIndex) return prev
+        const nextVis = vis.slice()
+        const [moved] = nextVis.splice(cur, 1)
+        nextVis.splice(newIndex, 0, moved)
+        if (filter === 'All') return nextVis
+        const result = []
+        let ci = 0
+        for (const item of prev) {
+          result.push(item.category === filter ? nextVis[ci++] : item)
+        }
+        return result
+      })
+    }
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove)
+      window.removeEventListener('pointerup', onUp)
+      setDraggingId(null)
+      onReorder(localRef.current.map((it) => it.id))
+    }
+    window.addEventListener('pointermove', onMove)
+    window.addEventListener('pointerup', onUp)
+  }
 
   return (
     <div className="px-4">
@@ -20,20 +71,34 @@ export default function Wardrobe({ items, onAdd, onUpdate, onDelete }) {
           <h1 className="text-2xl font-semibold tracking-tight">Wardrobe</h1>
           <p className="text-sm text-subtle">{items.length} item{items.length === 1 ? '' : 's'}</p>
         </div>
-        <button
-          onClick={() => setAdding(true)}
-          className="grid h-11 w-11 place-items-center rounded-full bg-ink text-canvas shadow-card transition active:scale-95"
-          aria-label="Add item"
-        >
-          <PlusIcon className="h-6 w-6" />
-        </button>
+        <div className="flex items-center gap-2">
+          {visible.length > 1 && (
+            <button
+              onClick={() => setReordering((r) => !r)}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                reordering ? 'bg-ink text-canvas' : 'bg-white text-subtle shadow-card'
+              }`}
+            >
+              {reordering ? 'Done' : 'Reorder'}
+            </button>
+          )}
+          {!reordering && (
+            <button
+              onClick={() => setAdding(true)}
+              className="grid h-11 w-11 place-items-center rounded-full bg-ink text-canvas shadow-card transition active:scale-95"
+              aria-label="Add item"
+            >
+              <PlusIcon className="h-6 w-6" />
+            </button>
+          )}
+        </div>
       </header>
 
       <div className="no-scrollbar -mx-4 mt-4 flex gap-2 overflow-x-auto px-4">
         {FILTERS.map((f) => (
           <button
             key={f}
-            onClick={() => setFilter(f)}
+            onClick={() => handleFilterChange(f)}
             className={`whitespace-nowrap rounded-full px-4 py-1.5 text-sm font-medium transition ${
               filter === f ? 'bg-ink text-canvas' : 'bg-white text-subtle shadow-card'
             }`}
@@ -43,7 +108,44 @@ export default function Wardrobe({ items, onAdd, onUpdate, onDelete }) {
         ))}
       </div>
 
-      {visible.length === 0 ? (
+      {reordering ? (
+        <div
+          ref={listRef}
+          className="mt-4 space-y-2"
+          style={{ touchAction: draggingId ? 'none' : undefined }}
+        >
+          {visible.map((item) => (
+            <div
+              key={item.id}
+              data-iid={item.id}
+              className={`flex items-center gap-3 rounded-xl bg-white p-2 shadow-card transition-shadow ${
+                draggingId === item.id ? 'relative z-10 scale-[1.02] shadow-float' : ''
+              } ${draggingId && draggingId !== item.id ? 'opacity-60' : ''}`}
+            >
+              <div
+                className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg"
+                style={{
+                  backgroundImage: 'repeating-conic-gradient(#e8e6e2 0% 25%, #f5f4f1 0% 50%)',
+                  backgroundSize: '12px 12px',
+                }}
+              >
+                <img src={item.image} alt={item.name || item.category} className="h-full w-full object-contain" />
+              </div>
+              <div className="min-w-0 flex-1">
+                {item.name && <p className="truncate text-sm font-medium">{item.name}</p>}
+                <p className={`text-xs text-subtle ${!item.name ? 'text-sm font-medium text-ink' : ''}`}>{item.category}</p>
+              </div>
+              <button
+                onPointerDown={(e) => startDrag(e, item.id)}
+                className="flex h-11 w-11 flex-shrink-0 cursor-grab touch-none items-center justify-center text-subtle/60 active:cursor-grabbing"
+                aria-label="Drag to reorder"
+              >
+                <GripIcon className="h-5 w-5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : visible.length === 0 ? (
         <EmptyState onAdd={() => setAdding(true)} filtered={filter !== 'All'} />
       ) : (
         <div className="mt-4 grid grid-cols-2 gap-3">
@@ -154,7 +256,7 @@ function EmptyState({ onAdd, filtered }) {
 // Each queue entry: { id, raw, processed, status: 'loading'|'removing'|'done'|'error' }
 function AddItemSheet({ open, onClose, onAdd }) {
   const [queue, setQueue] = useState([])
-  const [removeBg, setRemoveBg] = useState(true)
+  const [removeBg, setRemoveBg] = useState(false)
   const [category, setCategory] = useState(CATEGORIES[0])
   const [name, setName] = useState('')
   const [error, setError] = useState('')
